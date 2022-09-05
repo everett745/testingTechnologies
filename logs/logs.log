@@ -1,0 +1,4 @@
+db.2022-09-05 19:42:07 ERROR MongoClientUtil:95 - com.mongodb.MongoWriteException: Write operation error on server localhost:27017. Write error: WriteError{code=11000, message='E11000 duplicate key error collection: TestingTechnologies.User index: _id_ dup key: { _id: "631626df6c6f07087d74e00c" }', details={}}. 
+2022-09-05 19:43:23 ERROR MongoClientUtil:95 - com.mongodb.MongoWriteException: Write operation error on server localhost:27017. Write error: WriteError{code=11000, message='E11000 duplicate key error collection: TestingTechnologies.User index: _id_ dup key: { _id: "631626ade6bce4161c082324" }', details={}}. 
+2022-09-05 19:53:40 INFO  CsvApi:132 - User was created: User(id=ae7e25c1-a2f4-4304-b837-26738b1270e7, name=Test second name)
+2022-09-05 19:57:06 INFO  CsvApi:131 - User was created: User(id=63162a62d8fcf41c11d08230, name=Test second name !!!)
