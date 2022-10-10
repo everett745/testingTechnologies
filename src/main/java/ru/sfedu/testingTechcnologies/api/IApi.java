@@ -9,7 +9,11 @@ import lombok.NonNull;
 
 public interface IApi {
 
-  RequestStatus createUser(@NonNull User name);
+  RequestStatus createUser(@NonNull User user);
+
+  RequestStatus addUser(@NonNull User user);
+
+  RequestStatus addUsers(@NonNull List<User> users);
 
   List<User> getUsers();
 

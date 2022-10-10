@@ -8,6 +8,8 @@ public class Messages {
 
 
   public static final String USER_CREATE_SUCCESS = "User was created: %s";
+  public static final String USER_ADDED_SUCCESS = "User was added: %s";
+  public static final String USERS_ADDED_SUCCESS = "Users was added";
   public static final String USER_UPDATE_SUCCESS = "User was updated: %s";
   public static final String USER_UPDATE_ERROR = "User not updated: %s";
   public static final String USER_DELETE_SUCCESS = "User was deleted: %s";

@@ -1,126 +1,46 @@
 package ru.sfedu.testingTechcnologies.api;
 
-import com.opencsv.CSVReader;
-import com.opencsv.CSVWriter;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import org.bson.types.ObjectId;
-import ru.sfedu.testingTechcnologies.Constants;
 import ru.sfedu.testingTechcnologies.Messages;
 import ru.sfedu.testingTechcnologies.model.RequestStatus;
 import ru.sfedu.testingTechcnologies.model.User;
-import ru.sfedu.testingTechcnologies.utils.PropertyProvider;
+import ru.sfedu.testingTechcnologies.utils.CsvUtil;
 
 import java.io.*;
 import java.util.*;
 
 @Log4j2
-public class CsvApi implements IApi {
-  private static IApi INSTANCE = null;
+public class CsvApi extends CsvUtil implements IApi {
+  private static CsvApi INSTANCE = null;
 
-  public static IApi getInstance() {
+  private RequestStatus updateUsersList(List<User> users) {
+    try {
+      write(User.class, users, true);
+      return RequestStatus.SUCCESS;
+    } catch (IOException e) {
+      log.error(e);
+      return RequestStatus.FAILED;
+    }
+  }
+
+  public static CsvApi getInstance() {
     if (INSTANCE == null) {
+      CsvUtil.getInstance();
       INSTANCE = new CsvApi();
     }
     return INSTANCE;
   }
 
-  private <T> void write(T object) throws IOException {
-    write(object.getClass(), Collections.singletonList(object), false);
-  }
-
-  private <T> void write(Class<?> tClass, List<T> objectList, boolean overwrite) throws IOException {
-    List<T> tList;
-
-    if (!overwrite) {
-      tList = (List<T>) read(tClass);
-      tList.addAll(objectList);
-    } else {
-      tList = objectList;
-    }
-
-    if (tList.isEmpty()) {
-      deleteFile(tClass);
-    }
-
-    CSVWriter csvWriter = getCsvWriter(tClass);
-    StatefulBeanToCsv<T> beanToCsv = new StatefulBeanToCsvBuilder<T>(csvWriter)
-            .withApplyQuotesToAll(false)
-            .build();
-
+  public List<User> getUsersFromFile(String path) {
     try {
-      beanToCsv.write(tList);
-    } catch (CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
-      log.error(e);
-    }
-
-    csvWriter.close();
-  }
-
-  private <T> CSVWriter getCsvWriter(Class<T> tClass) throws IOException {
-    FileWriter writer;
-    File path = new File(PropertyProvider.getProperty(Constants.CSV_PATH));
-    File file = getFile(tClass);
-
-    if (!file.exists() && path.mkdirs() && !file.createNewFile()) {
-      throw new IOException(String.format(Messages.CREATE_FILE_SUCCESS, file.getName()));
-    }
-
-    writer = new FileWriter(file);
-    return new CSVWriter(writer);
-  }
-
-  private <T> CSVReader getCsvReader(Class<T> tClass) throws IOException {
-    File file = getFile(tClass);
-
-    if (!file.exists() && !file.createNewFile()) {
-      throw new IOException(String.format(Messages.CREATE_FILE_ERROR, file.getName()));
-    }
-
-    FileReader fileReader = new FileReader(file);
-    BufferedReader bufferedReader = new BufferedReader(fileReader);
-    return new CSVReader(bufferedReader);
-  }
-
-  private <T> List<T> read(Class<T> tClass) throws IOException {
-    List<T> tList;
-
-    try {
-      CSVReader csvReader = getCsvReader(tClass);
-      CsvToBean<T> csvToBean = new CsvToBeanBuilder<T>(csvReader)
-              .withType(tClass)
-              .withIgnoreLeadingWhiteSpace(true)
-              .build();
-      tList = csvToBean.parse();
-      csvReader.close();
-    } catch (IOException e) {
-      log.error(e);
-      throw e;
-    }
-    return tList;
-  }
-
-  private <T> File getFile(Class<T> tClass) throws IOException {
-    return new File(PropertyProvider.getProperty(Constants.CSV_PATH)
-            + tClass.getSimpleName().toLowerCase()
-            + PropertyProvider.getProperty(Constants.CSV_EXTENSION));
-  }
-
-  private <T> void deleteFile(Class<T> tClass) {
-    try {
-      ;
-      log.info(String.format(Messages.DELETE_FILE, getFile(tClass).getName(), getFile(tClass).delete()));
+      return read(User.class, path);
     } catch (IOException e) {
       log.error(e);
     }
+    return new ArrayList<>();
   }
-
 
   @Override
   public RequestStatus createUser(@NonNull User user) {
@@ -129,6 +49,30 @@ public class CsvApi implements IApi {
       user.setId(id);
       write(user);
       log.info(String.format(Messages.USER_CREATE_SUCCESS, user));
+    } catch (IOException e) {
+      log.error(e);
+      return RequestStatus.FAILED;
+    }
+    return RequestStatus.SUCCESS;
+  }
+
+  @Override
+  public RequestStatus addUser(@NonNull User user) {
+    try {
+      write(user);
+      log.info(String.format(Messages.USER_ADDED_SUCCESS, user));
+    } catch (IOException e) {
+      log.error(e);
+      return RequestStatus.FAILED;
+    }
+    return RequestStatus.SUCCESS;
+  }
+
+  @Override
+  public RequestStatus addUsers(@NonNull List<User> users) {
+    try {
+      write(users);
+      log.info(String.format(Messages.USERS_ADDED_SUCCESS));
     } catch (IOException e) {
       log.error(e);
       return RequestStatus.FAILED;
@@ -212,16 +156,6 @@ public class CsvApi implements IApi {
 
     log.error(String.format(Messages.USER_DELETE_ERROR, id));
     return RequestStatus.FAILED;
-  }
-
-  private RequestStatus updateUsersList(List<User> users) {
-    try {
-      write(User.class, users, true);
-      return RequestStatus.SUCCESS;
-    } catch (IOException e) {
-      log.error(e);
-      return RequestStatus.FAILED;
-    }
   }
 
 }
